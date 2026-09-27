@@ -27,7 +27,7 @@ var CSS=`
 .mua-ac .op:hover{border-color:var(--border-strong)}
 .mua-ac .lt{flex:none;width:26px;height:26px;border-radius:50%;border:0.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text-secondary);transition:background .2s,color .2s}
 .mua-ac .tx{flex:1}
-.mua-ac .op.sel{background:color-mix(in srgb,var(--bg-accent) 45%,var(--surface-2));border-color:var(--border-accent);border-bottom-left-radius:4px;border-bottom-right-radius:4px}
+.mua-ac .op.sel{background:color-mix(in srgb,var(--bg-accent) 45%,var(--surface-2));border-color:var(--border-accent);border-bottom-left-radius:4px!important;border-bottom-right-radius:4px!important}
 @keyframes muapop{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
 .mua-ac .op.sel .lt{animation:muapop .38s cubic-bezier(.32,.72,0,1);background:var(--text-accent);border-color:var(--text-accent);color:var(--surface-2)}
 .mua-ac .op.x .tx{text-decoration:line-through;color:var(--text-muted)}
@@ -38,15 +38,15 @@ var CSS=`
 .mua-ac .tr{display:grid;grid-template-rows:0fr;transition:grid-template-rows .42s cubic-bezier(.32,.72,0,1)}
 .mua-ac .tr.open{grid-template-rows:1fr}
 .mua-ac .tr>div{overflow:hidden;padding-bottom:3px}
-.mua-ac .in{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:2px;padding:6px 8px 6px 14px;border-radius:4px 4px 12px 12px;background:color-mix(in srgb,var(--bg-accent) 45%,var(--surface-2));border:0.5px solid var(--border-accent);opacity:0;transform:translateY(-10px) scaleY(.6);transform-origin:top center;transition:opacity .28s cubic-bezier(.32,.72,0,1) .05s,transform .45s cubic-bezier(.32,.72,0,1)}
+.mua-ac .in{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 8px;margin-top:2px;padding:8px 8px 8px 12px;border-radius:4px 4px 12px 12px!important;background:color-mix(in srgb,var(--bg-accent) 45%,var(--surface-2));border:0.5px solid var(--border-accent);opacity:0;transform:translateY(-10px) scaleY(.6);transform-origin:top center;transition:opacity .28s cubic-bezier(.32,.72,0,1) .05s,transform .45s cubic-bezier(.32,.72,0,1)}
 .mua-ac .tr.open .in{opacity:1;transform:none}
-.mua-ac .hs{font-size:12px;color:var(--text-accent);display:flex;align-items:center;gap:6px}
+.mua-ac .hs{font-size:12px;line-height:1;color:var(--text-accent);display:flex;align-items:center;gap:6px;min-height:26px}
 .mua-ac .pen{width:26px!important;height:26px!important;padding:0!important;border:0!important;border-radius:50%!important;background:transparent!important;box-shadow:none!important;color:var(--text-accent);font-size:14px;display:inline-flex;align-items:center;justify-content:center;transition:background .15s}
 .mua-ac .pen:active,.mua-ac .pen.on{background:color-mix(in srgb,var(--text-accent) 12%,transparent)!important}
 .mua-ac .why{flex-basis:100%;display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s cubic-bezier(.32,.72,0,1)}
 .mua-ac .why.open{grid-template-rows:1fr}
 .mua-ac .why>div{overflow:hidden}
-.mua-ac .why textarea{display:block;width:100%;margin:6px 0 2px;min-height:54px;resize:vertical;border-radius:8px;border:0.5px solid var(--border-accent);background:var(--surface-2);color:var(--text-primary);font:inherit;font-size:13px;line-height:1.5;padding:7px 9px;box-shadow:none;outline:none}
+.mua-ac .why textarea{display:block;width:100%;margin:8px 0 0;min-height:54px;resize:vertical;border-radius:8px;border:0.5px solid var(--border-accent);background:var(--surface-2);color:var(--text-primary);font:inherit;font-size:13px;line-height:1.5;padding:7px 9px;box-shadow:none;outline:none}
 .mua-ac .why textarea:focus{border-color:var(--text-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--text-accent) 15%,transparent)}
 .mua-ac .ch{display:flex;gap:5px;opacity:0;transform:translateY(-4px);transition:opacity .25s ease .14s,transform .35s cubic-bezier(.32,.72,0,1) .12s}
 .mua-ac .tr.open .ch{opacity:1;transform:none}
@@ -191,7 +191,7 @@ function set(){z.style.transformOrigin=ox+'% '+oy+'%';z.style.transform=on?'scal
 var sx=0,sy=0,moved=false;f.addEventListener('pointerdown',function(e){sx=e.clientX;sy=e.clientY;moved=false;});
 f.addEventListener('pointermove',function(e){if(!on||e.buttons===0&&e.pointerType==='mouse')return;var r=f.getBoundingClientRect();if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>6)moved=true;if(moved){ox=Math.min(100,Math.max(0,(e.clientX-r.left)/r.width*100));oy=Math.min(100,Math.max(0,(e.clientY-r.top)/r.height*100));set();}});
 f.addEventListener('click',function(e){if(moved)return;var r=f.getBoundingClientRect();ox=(e.clientX-r.left)/r.width*100;oy=(e.clientY-r.top)/r.height*100;on=!on;set();});}
-window.MUA={v:'1.1.0',
+window.MUA={v:'1.1.1',
 answer:function(id,d){css();var host=document.getElementById(id);if(!host)return;var Q=d.qid;
 var h='<div class="mua mua-ac"><h2 class="sr">'+Q+' answer card</h2>'+(d.img?fig(d.img,d.mark,d.alt):'')+'<div class="q stem"><div class="ql">'+(d.label||Q)+'</div>'+d.stem+'</div><button type="button" class="rv"><i class="ti ti-chevron-down" aria-hidden="true"></i> Show options</button><div class="ls">';
 d.opts.forEach(function(o,i){h+='<div class="op" data-l="'+L[i]+'"><span class="lt">'+L[i]+'</span><span class="tx">'+o+'</span><button type="button" class="ic" aria-label="Strike out '+L[i]+'"><i class="ti ti-eye-off" aria-hidden="true"></i></button></div>';});
