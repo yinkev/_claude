@@ -6,7 +6,7 @@
    <script>MUA.feedback('y',{quote:'...',who:'Lecturer · L00 00:00',traps:[{h:'<u class="bz">fact</u>. reason',k:1},{h:'...',p:1}],note:'',hook:{lab:'THE HOOK',html:'...'},src:'L00 ...'})</script>
    No personal data lives here. */
 (function(){
-if(window.MUA)return;
+var P=window.MUA;if(P&&P.answer)return;
 var CSS=`
 .mua{--mua-t1:#E1F5EE;--mua-t1f:#085041;--mua-t1d:#0F6E56;--mua-t2:#EEEDFE;--mua-t2f:#3C3489;--mua-t3:#FAECE7;--mua-t3f:#712B13;--mua-t3d:#993C1D;--mua-hl:#9FE1CB;--mua-bz:rgba(226,75,74,.7)}
 [data-mode="dark"] .mua{--mua-t1:#04342C;--mua-t1f:#9FE1CB;--mua-t1d:#5DCAA5;--mua-t2:#26215C;--mua-t2f:#CECBF6;--mua-t3:#4A1B0C;--mua-t3f:#F5C4B3;--mua-t3d:#F0997B;--mua-hl:#0F6E56;--mua-bz:rgba(240,149,149,.8)}
@@ -191,7 +191,7 @@ function set(){z.style.transformOrigin=ox+'% '+oy+'%';z.style.transform=on?'scal
 var sx=0,sy=0,moved=false;f.addEventListener('pointerdown',function(e){sx=e.clientX;sy=e.clientY;moved=false;});
 f.addEventListener('pointermove',function(e){if(!on||e.buttons===0&&e.pointerType==='mouse')return;var r=f.getBoundingClientRect();if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>6)moved=true;if(moved){ox=Math.min(100,Math.max(0,(e.clientX-r.left)/r.width*100));oy=Math.min(100,Math.max(0,(e.clientY-r.top)/r.height*100));set();}});
 f.addEventListener('click',function(e){if(moved)return;var r=f.getBoundingClientRect();ox=(e.clientX-r.left)/r.width*100;oy=(e.clientY-r.top)/r.height*100;on=!on;set();});}
-window.MUA={v:'1.1.2',
+window.MUA={v:'1.2.0',
 answer:function(id,d){css();var host=document.getElementById(id);if(!host)return;var Q=d.qid;
 var h='<div class="mua mua-ac"><h2 class="sr">'+Q+' answer card</h2>'+(d.img?fig(d.img,d.mark,d.alt):'')+'<div class="q stem"><div class="ql">'+(d.label||Q)+'</div>'+d.stem+'</div><button type="button" class="rv"><i class="ti ti-chevron-down" aria-hidden="true"></i> Show options</button><div class="ls">';
 d.opts.forEach(function(o,i){h+='<div class="op" data-l="'+L[i]+'"><span class="lt">'+L[i]+'</span><span class="tx">'+o+'</span><button type="button" class="ic" aria-label="Strike out '+L[i]+'"><i class="ti ti-eye-off" aria-hidden="true"></i></button></div>';});
@@ -260,4 +260,5 @@ if(d.bars){h+='<div class="lab">'+esc(d.barsLab||'WHERE THE POINTS WENT')+'</div
 if(d.insight)h+='<div class="ins">'+d.insight+'</div>';h+='</div>';var R=el(h);host.appendChild(R);
 requestAnimationFrame(function(){requestAnimationFrame(function(){R.querySelector('.fgc').style.strokeDashoffset=C*(1-pc/100);});});}
 };
+if(P){for(var k in P)if(!(k in MUA))MUA[k]=P[k];if(P.h)for(k in P.h)if(!(k in MUA.h))MUA.h[k]=P.h[k];}
 })();

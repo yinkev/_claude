@@ -7,6 +7,8 @@ Public helper code that Claude loads into chat widgets during study sessions, so
 ## Contents
 - `cards/card.js`: answer card (predict → options → strike → confidence tray with optional reasoning) and feedback card (quote → trap rows → hook). Load it pinned to a commit (tags can't be pushed from Claude sessions, and a commit pin never changes):
   `https://cdn.jsdelivr.net/gh/yinkev/_claude@01c1f4c5a18e460fce297635a4aeffe5ad8325b3/cards/card.js`  (v1.1.0)
+- `cards/body.js`: body map. Front + back dermatome figure with a spine panel (vertebrae, roots, cord end, landmarks, reflexes, disc rule). Separate file so `card.js` stays small; works alone or with `card.js`, in either load order:
+  `<script src="https://cdn.jsdelivr.net/gh/yinkev/_claude@<COMMIT>/cards/body.js"></script>`
 
 ## API (all data-only; the engine draws everything)
 | Call | What it draws |
@@ -16,11 +18,19 @@ Public helper code that Claude loads into chat widgets during study sessions, so
 | `MUA.h.fork/split/chain/timeline/ladder/grid/stamp/eq/mnemonic({...})` | Hook presets that return HTML for `hook.html`. Questions take `{kw}` for the highlighted keyword |
 | `MUA.stepper(id,{lab,steps:[{t,d,chip,svg}],src})` | Tap/swipe-through diagram with cross-fading frames |
 | `MUA.report(id,{items:[{q,ok,t}],kv:[[k,v]],bars:[{k,v,color}],insight})` | Session report: score ring, per-question strip, miss-type bars |
+| `MUA.body(id,{view?:'front'\|'back'\|'both',hl?:[levels],spine?:true,caption?})` | Body map (needs `body.js`). Dermatome bands per level, highlighted levels glow and get a label chip; tap a band for its area. Levels `C2`…`C8`, `T1`…`T12`, `L1`…`L5`, `S1`…`S5`, or ranges like `'C5-T1'` |
+| `MUA.h.body({...same opts, q?, kw?})` | Body map as a hook for `hook.html`. Placeholders auto-render when inserted into the page |
+
+Body map example (a missed L4–L5 disc question):
+```js
+MUA.feedback('y',{quote:'...',who:'...',traps:[...],hook:{lab:'THE MAP',html:MUA.h.body({hl:['L5'],q:'L4–L5 disc → {kw}',kw:'L5'})},src:'...'})
+```
 
 Design rules baked in: host CSS tokens only (light + dark), iOS curve `cubic-bezier(.32,.72,0,1)`, flat tinted buttons (no neumorphism), reduced-motion safe, phone-first (tested at 390 px).
 
 ## Versions
 | Version | Commit | Notes |
 |---|---|---|
+| v1.2.0 | (pending) | Body map: dermatomes front/back + spine panel, highlight API |
 | v1.1.0 | 01c1f4c | Picture-ID card (zoom, pan, pulsing marker), 9 hook presets, stepper, session report |
 | v1.0.0 | 43148ad | First engine: answer card v6 look (tinted confidence buttons, plain eye strike, pencil note) + feedback card (quote, trap rows, hook) |
