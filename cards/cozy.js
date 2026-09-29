@@ -1,4 +1,4 @@
-/* _claude cozy anatomy v1.1.0 — "Cozy Anatomy" design system + teaching widgets.
+/* _claude cozy anatomy v1.2.0 — "Cozy Anatomy" design system + teaching widgets.
    Chunky outlines, jelly discs, noodle nerves with DRG beads, press-down buttons, sticker labels, inventory tiles.
    <div id="x"></div>
    <script src="https://cdn.jsdelivr.net/gh/yinkev/_claude@<COMMIT>/cards/cozy.js"></script>
@@ -6,6 +6,7 @@
    Widgets: disc (herniation → root, with arm/leg dermatome) · injury (lower-limb nerve detective, front/back legs)
             oocyte (egg cell life clock) · week1 (first week + fertilization) · fetal (blood-making site + placental barrier)
             crest (neural crest sorter) · defects (AFP / defect-type sorter) · sort(id,{title,bins,items,tabs?}) any sorter
+            review(id,{title,score,meta,topics,groups,next}) mock review · signal (switchboard) · fluid (water shift + Fick) · fixit (504 weak-spot sorter)
    Generic teaching content only. No personal data lives here. */
 (function(){
 var M=window.MUA=window.MUA||{};M.cozy=M.cozy||{};if(M.cozy.v)return;
@@ -475,5 +476,155 @@ var DEF={name:'Defect type',bins:[{id:'ma',name:'Malformation'},{id:'de',name:'D
  {n:'Vertebral, anal, cardiac, TE fistula, renal, limb cluster',b:'as',w:'VACTERL: a non-random cluster with no single cause.'}]};
 M.cozy.defects=function(id){return M.cozy.sort(id,{chip:'Sort the defects',title:'AFP and defect types',sub:'Two decks. Switch with the tabs.',tabs:[AFP,DEF],src:'Dr. Shrestha · L18 (AFP 00:49:56 · deformation 00:11:25) · deck s6, s37'});};
 
-M.cozy.v='1.1.0';
+/* ===================== batch 3: mock review + physiology/signaling labs ===================== */
+var CSS3=`
+.cz .rhd{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;margin-top:10px}
+.cz .rhd svg{width:104px;height:104px}
+.cz .tbr{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 38px;gap:8px;align-items:center;padding:6px 0;font-size:13.5px;border-top:2px dashed color-mix(in srgb,var(--ink) 18%,transparent)}
+.cz .tbr:first-child{border-top:0}.cz .tbr b{font:600 13px/1 Fredoka,sans-serif;text-align:right}
+.cz .bar{height:14px;border:2.5px solid var(--ink);border-radius:8px;background:var(--card);overflow:hidden}.cz .bar i{display:block;height:100%;border-right:2.5px solid var(--ink)}
+.cz .grp{margin-top:16px}
+.cz .gh{display:flex;align-items:center;gap:10px;font:600 17px/1.15 Fredoka,sans-serif}
+.cz .cnt{min-width:30px;height:30px;border-radius:50%;border:2.5px solid var(--ink);display:grid;place-items:center;font:600 14px/1 Fredoka,sans-serif;color:#2E2418;box-shadow:0 2px 0 var(--shd);flex:none}
+.cz .rule{margin-top:8px;background:#FFF;color:#2E2418;border:2.5px dashed var(--ink);border-radius:14px;padding:9px 12px;font-size:13.5px;line-height:1.4}
+.cz .rule b{font-family:Fredoka,sans-serif;font-weight:600}
+.cz .rvs{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.cz .rv{width:100%;text-align:left;background:var(--card);border:2.5px solid var(--ink);border-radius:14px;padding:9px 12px;box-shadow:0 3px 0 var(--shd);transition:transform .12s,box-shadow .12s}
+.cz .rv:active{transform:translateY(2px);box-shadow:0 1px 0 var(--shd)}
+.cz .rv .t1{display:flex;gap:8px;align-items:center;font:600 14.5px/1.2 Fredoka,sans-serif}
+.cz .rv .id{font:600 11px/1 Fredoka,sans-serif;background:var(--bg);border:2px solid var(--ink);border-radius:999px;padding:3px 7px 2px;flex:none}
+.cz .rv .ch{margin-left:auto;transition:transform .3s cubic-bezier(.32,.72,0,1);flex:none}
+.cz .rv.open .ch{transform:rotate(90deg)}
+.cz .yk{margin-top:5px;font-size:13px;line-height:1.35}.cz .yk s{color:var(--ouch);text-decoration-thickness:2px}.cz .yk em{font-style:normal;color:#3E8A2E;font-weight:800}
+@media (prefers-color-scheme:dark){.cz .yk em{color:#A8E596}}
+.cz .fx{display:none;margin-top:8px;padding-top:8px;border-top:2px dashed color-mix(in srgb,var(--ink) 25%,transparent);font-size:13.5px;line-height:1.45}
+.cz .rv.open .fx{display:block;animation:czI .35s cubic-bezier(.3,1.5,.5,1) both}
+.cz .lanes{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:10px;margin-top:14px}
+@media (max-width:560px){.cz .lanes{grid-auto-flow:row}}
+.cz .lane{background:var(--card);border:3px solid var(--ink);border-radius:20px;box-shadow:0 4px 0 var(--shd);padding:10px}
+.cz .lane h4{margin:0 0 8px;font:600 14px/1 Fredoka,sans-serif;color:var(--mut)}
+.cz .node{position:relative;border:2.5px solid var(--ink);border-radius:14px;padding:9px 10px;font:600 14px/1.25 Fredoka,sans-serif;color:#2E2418;box-shadow:0 3px 0 var(--shd);transition:background .3s,transform .4s cubic-bezier(.3,1.6,.5,1)}
+.cz .node+.node{margin-top:22px}
+.cz .node+.node:before{content:"";position:absolute;left:50%;top:-22px;width:6px;height:17px;margin-left:-3px;background:var(--nd);border:2px solid var(--ink);border-radius:3px}
+.cz .node .bd{display:none;position:absolute;right:-6px;top:-12px;font:600 11.5px/1 Fredoka,sans-serif;background:var(--ouch);color:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:4px 8px 3px;transform:rotate(4deg);white-space:nowrap}
+.cz .node.hot{background:var(--ouch)!important;color:#fff;animation:czHot 1.2s ease-in-out infinite}.cz .node.hot .bd{display:block}
+.cz .node.hot.good{background:var(--leaf)!important;color:#1E3318;animation:none}.cz .node.hot.good .bd{background:#3E8A2E}
+.cz .node.off{opacity:.35;filter:saturate(.3)}
+@keyframes czHot{0%,100%{transform:none}50%{transform:scale(1.03)}}
+.cz .brk{border-style:dashed}
+.cz .tanks{display:block;width:100%;max-width:460px;margin:0 auto}
+.cz .calc{font:600 15px/1.45 Fredoka,sans-serif}.cz .calc .n{color:var(--ouch)}
+.cz .fk{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.cz .fk .card{padding:10px}.cz .fk label{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:13px;margin-top:6px}
+.cz .fk input{width:64px;font:600 15px/1 Fredoka,sans-serif;text-align:center;color:var(--txt);background:var(--bg);border:2.5px solid var(--ink);border-radius:10px;padding:6px 4px}
+.cz .fk .rt{font:600 22px/1 Fredoka,sans-serif;margin-top:8px}`;
+function boot3(){boot2();if(document.getElementById('cz-css3'))return;var s=document.createElement('style');s.id='cz-css3';s.textContent=CSS3;document.head.appendChild(s);}
+var CHEV='<svg width="9" height="15" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5L6.5 7l-5 5.5"/></svg>';
+
+/* ---------- 8. MOCK REVIEW (data-driven) ---------- */
+M.cozy.review=function(id,d){boot3();
+  var got=d.score[0],tot=d.score[1],pct=Math.round(got/tot*100),C=2*Math.PI*38,col=pct>=80?'var(--leaf)':pct>=65?'var(--nd)':'var(--ouch)';
+  var ring='<svg viewBox="0 0 104 104" role="img" aria-label="'+pct+' percent"><circle cx="52" cy="56" r="38" fill="none" stroke="var(--shd)" stroke-width="18" opacity=".16"/><circle cx="52" cy="52" r="38" fill="none" stroke="var(--ink)" stroke-width="18"/><circle cx="52" cy="52" r="38" fill="none" stroke="var(--card)" stroke-width="12"/>'+
+   '<circle cx="52" cy="52" r="38" fill="none" stroke="'+col+'" stroke-width="12" stroke-linecap="round" stroke-dasharray="'+(C*got/tot).toFixed(1)+' '+C.toFixed(1)+'" transform="rotate(-90 52 52)"/><text x="52" y="58" text-anchor="middle" font-size="22" style="fill:var(--txt)">'+pct+'%</text></svg>';
+  var tb=(d.topics||[]).map(function(t){var p=t[1]/t[2],c=p>=.8?'var(--leaf)':p>=.5?'var(--nd)':'var(--ouch)';return '<div class="tbr"><span>'+t[0]+'</span><div class="bar"><i style="width:'+Math.max(4,p*100)+'%;background:'+c+'"></i></div><b>'+t[1]+'/'+t[2]+'</b></div>';}).join('');
+  var gs=d.groups.map(function(g,gi){return '<div class="grp"><div class="gh"><span class="cnt" style="background:'+(g.color||'var(--nd)')+'">'+g.items.length+'</span>'+g.name+'</div><div class="rule">'+g.rule+'</div><div class="rvs">'+
+    g.items.map(function(x,i){return '<button class="rv" data-r="'+gi+'-'+i+'"><div class="t1"><span class="id">'+x.q+'</span>'+x.t+'<span class="ch">'+CHEV+'</span></div><div class="yk"><s>You: '+x.you+'</s> → <em>'+x.key+'</em></div><div class="fx">'+x.fix+'</div></button>';}).join('')+'</div></div>';}).join('');
+  var R=mount(id,'<span class="chip">Mock review</span><h3>'+d.title+'</h3><div class="rhd">'+ring+'<div><div style="font:600 30px/1 Fredoka,sans-serif">'+got+' / '+tot+'</div><div class="sub" style="margin-top:6px">'+d.meta+'</div></div></div>'+
+   (d.insight?'<div class="bub">'+d.insight+'</div>':'')+(tb?'<div class="hd2">Where the points went</div><div class="card" style="margin-top:10px">'+tb+'</div>':'')+
+   '<div class="hd2">Your '+d.groups.reduce(function(a,g){return a+g.items.length;},0)+' misses, by the habit behind them</div><div class="sub" style="margin:2px 2px 0">Tap a miss for the fix.</div>'+gs+
+   (d.next?'<div class="bub" style="margin-top:18px">'+d.next+'</div>':'')+'<div class="foot">'+(d.src||'')+'</div>');
+  if(!R)return;R.addEventListener('click',function(e){var b=e.target.closest('.rv');if(b)b.classList.toggle('open');});return R;};
+
+/* ---------- 9. SIGNAL SWITCHBOARD ---------- */
+var SIG={
+ rtk:{n:'Growth factor (RTK)',rule:'<b>γ = Growth factor.</b> RTK → PLC-γ. PI3K puts a phosphate on (PIP2 → PIP3); PTEN takes it off.',lanes:[
+   {h:'PLC-γ branch',s:[['Growth factor → RTK dimer, tyrosines phosphorylated','jel'],['PLC-γ','nd'],['PIP2 → IP3 + DAG','sac','ip3'],['IP3 → SER Ca²⁺ channel · DAG → PKC','bone2']]},
+   {h:'PI3K branch',s:[['PI3 kinase','nd'],['PIP2 → PIP3 (not IP3!)','sac','pip3'],['Akt → survival, no apoptosis','leaf','akt'],['PTEN: PIP3 → PIP2 (the off switch)','card','pten',1]]},
+   {h:'Ras branch',s:[['Ras-GTP (lipid anchor, inner leaflet)','nd','ras'],['MAPK cascade → proliferation','leaf','mapk']]}],
+  br:[{id:'pten',t:'Lose PTEN',hot:{pip3:'piles up ↑',akt:'stuck ON'},off:['pten'],m:'An enzyme that’s missing can’t use up its substrate. PTEN’s substrate is <b>PIP3</b>, so PIP3 piles up and Akt never switches off.'},
+      {id:'ras',t:'Ras stuck on GTP',hot:{ras:'always ON',mapk:'nonstop'},m:'Mutant Ras can’t hydrolyze GTP, so the MAPK cascade keeps firing. Normal Ras hangs on the <b>inner</b> leaflet by a lipid chain (not GPI).'}]},
+ gq:{n:'Gq GPCR',rule:'<b>β = GPCR (Gq).</b> Same reaction as PLC-γ (PIP2 → IP3 + DAG), different receptor.',lanes:[
+   {h:'',s:[['Hormone → Gq-coupled receptor','jel'],['Gαq-GTP','nd'],['PLC-β','nd','plc'],['PIP2 → IP3 + DAG','sac','ip3'],['IP3 → SER Ca²⁺ release · DAG → PKC','bone2','ca']]}],
+  br:[{id:'plc',t:'Block PLC-β',off:['plc'],hot:{ip3:'none made',ca:'no Ca²⁺ rise'},m:'No PLC-β, no IP3, so the SER never releases Ca²⁺.'}]},
+ gs:{n:'Gs GPCR',rule:'<b>Cholera locks Gαs ON</b> (ADP-ribosylation kills its GTPase) → cAMP ↑ → watery diarrhea.',lanes:[
+   {h:'',s:[['Hormone → Gs-coupled receptor','jel'],['Gαs-GTP','nd','gs'],['Adenylate cyclase','nd','ac'],['ATP → cAMP','sac','camp'],['PKA → Cl⁻ and water out (gut)','leaf','pka']]}],
+  br:[{id:'ctx',t:'Cholera toxin',hot:{gs:'locked ON',ac:'always on',camp:'↑↑↑',pka:'watery diarrhea'},m:'Cholera toxin ADP-ribosylates <b>Gαs</b>: it can’t turn itself off, so adenylate cyclase stays on and cAMP keeps rising.'}]},
+ gi:{n:'Gi GPCR',rule:'<b>Pertussis blocks Gαi</b> (the brake) → the brake is gone → cAMP ↑.',lanes:[
+   {h:'',s:[['Hormone → Gi-coupled receptor','jel'],['Gαi-GTP','nd','gi'],['Adenylate cyclase inhibited','card','ac',1],['cAMP ↓','sac','camp']]}],
+  br:[{id:'ptx',t:'Pertussis toxin',off:['gi','ac'],hot:{camp:'↑ (brake gone)'},m:'Pertussis toxin ADP-ribosylates <b>Gαi</b> so it can’t inhibit adenylate cyclase: cAMP rises. Cholera = Gs stuck on; pertussis = Gi stuck off.'}]},
+ no:{n:'Nitric oxide',rule:'<b>Made in the endothelium, received in the smooth muscle.</b> The NO receptor is guanylyl cyclase in the muscle’s cytoplasm.',lanes:[
+   {h:'Endothelial cell',s:[['ACh → Gq receptor → Ca²⁺','jel','ach'],['NO synthase makes NO','nd','nos'],['NO diffuses out','sac','no']]},
+   {h:'Smooth muscle cell',s:[['NO enters the cytoplasm','sac','no2'],['Guanylyl cyclase (cytoplasm)','nd','gc'],['GTP → cGMP → relaxation','leaf','cg']]}],
+  br:[{id:'scr',t:'Scrape off the endothelium',off:['ach','nos','no','no2'],hot:{cg:'no relaxation'},m:'No endothelium, no NO: ACh can’t relax the vessel anymore.'},
+      {id:'ntg',t:'Give nitroglycerin',good:1,off:['ach','nos','no'],hot:{no2:'NO donor',gc:'turned on',cg:'relaxes!'},m:'Nitroglycerin releases NO directly into the smooth muscle, so it works even without the endothelium.'}]}};
+M.cozy.signal=function(id){boot3();
+  var R=mount(id,'<span class="chip">Switchboard</span><h3>Signal switchboard</h3><div class="sub">Pick a receptor, then break something and watch what piles up.</div>'+
+   '<div class="segs" data-a="p">'+Object.keys(SIG).map(function(k,i){return '<button class="pill rg'+(i?'':' on')+'" data-p="'+k+'">'+SIG[k].n+'</button>';}).join('')+'</div>'+
+   '<div class="rule" data-a="rule" style="margin-top:12px"></div><div class="lanes" data-a="ln"></div><div class="segs" data-a="br" style="margin-top:16px"></div><div class="bub" data-a="m"></div>'+
+   '<div class="foot">Dr. Mamata · L22 (PLC-γ, PI3K/PTEN 00:32–00:43) · L23 (Gq/PLC-β 01:02, NO 00:58–01:09) · Cell Signaling deck</div>');
+  if(!R)return;var cur='rtk',br=null;
+  function draw(){var S=SIG[cur],b=br&&S.br.filter(function(x){return x.id===br;})[0];
+    $$(R,'[data-p]').forEach(function(p){p.classList.toggle('on',p.dataset.p===cur);});$(R,'[data-a=rule]').innerHTML=S.rule;
+    $(R,'[data-a=ln]').innerHTML=S.lanes.map(function(l){return '<div class="lane in">'+(l.h?'<h4>'+l.h+'</h4>':'')+l.s.map(function(n){var hot=b&&b.hot&&b.hot[n[2]],off=b&&b.off&&b.off.indexOf(n[2])>=0;return '<div class="node'+(n[3]?' brk':'')+(hot?' hot'+(b.good?' good':''):'')+(off?' off':'')+'" style="background:var(--'+n[1]+')">'+n[0]+(hot?'<span class="bd">'+hot+'</span>':'')+'</div>';}).join('')+'</div>';}).join('');
+    $(R,'[data-a=br]').innerHTML='<span style="font:600 14px/1 Fredoka,sans-serif;align-self:center">Break it:</span>'+S.br.map(function(x){return '<button class="pill'+(x.id===br?' no':'')+'" data-b="'+x.id+'">'+x.t+'</button>';}).join('')+(br?'<button class="pill" data-b="">Reset</button>':'');
+    $(R,'[data-a=m]').innerHTML=b?b.m:'Tap <b>Break it</b> to see which molecule piles up and which switch gets stuck.';}
+  R.addEventListener('click',function(e){var t;if((t=e.target.closest('[data-p]'))){cur=t.dataset.p;br=null;draw();return;}if((t=e.target.closest('[data-b]'))){br=t.dataset.b||null;draw();}});
+  draw();return R;};
+
+/* ---------- 10. FLUID SHIFT + FICK LAB ---------- */
+M.cozy.fluid=function(id){boot3();
+  var R=mount(id,'<span class="chip">Water lab</span><h3>Where does the water go?</h3><div class="sub">Two compartments, a membrane only water can cross. Add something and watch.</div>'+
+   '<div class="stage"><svg class="tanks" viewBox="0 0 320 214" data-a="tk"></svg></div>'+
+   '<div class="segs"><button class="pill" data-x="sol">+300 mOsm solute into E</button><button class="pill" data-x="h2o">+1 L pure water into E</button><button class="pill" data-x="iso">+1 L isotonic saline into E</button><button class="pill rg" data-x="rst">Reset</button></div>'+
+   '<div class="card" style="margin-top:14px"><div class="lab">The only math you need</div><div class="calc" data-a="calc" style="margin-top:6px"></div></div>'+
+   '<div class="rule">Never average the two osmolarities. <b>Total solute ÷ total water</b> gives the shared osmolarity; each side’s volume = its solute ÷ that number.</div>'+
+   '<div class="hd2">Fick’s law: compare two models</div><div class="fk">'+[1,2].map(function(m){return '<div class="card"><div class="lab">Model '+m+'</div><label>Gradient (mmol/L)<input type="number" data-f="c'+m+'" value="'+(m===1?80:20)+'"></label><label>Area (cm²)<input type="number" data-f="a'+m+'" value="'+(m===1?1:2)+'"></label><label>Thickness (µm)<input type="number" data-f="t'+m+'" value="'+(m===1?4:2)+'"></label><div class="rt" data-f="r'+m+'"></div></div>';}).join('')+'</div>'+
+   '<div class="bub" data-a="fv"></div><div class="foot">Dr. Gopi · L37 (Fick models 00:32–00:38, carriers 00:40–00:45) · L38 (compartments 00:01–00:18, “put a three star”)</div>');
+  if(!R)return;var st,ob={h:1},from,to,msg='';
+  function reset(){st={I:{v:2,s:600},E:{v:1,s:300}};from=to=null;msg='Start: I = 2 L, E = 1 L, both at 300 mOsm/L. Pick an action.';paint(st.I.v,st.E.v,null);calc();}
+  function eq(){var S=st.I.s+st.E.s,V=st.I.v+st.E.v,x=S/V;return {x:x,I:st.I.s/x,E:st.E.s/x};}
+  function tank(x,w,v,s,lab){var h=v/4*150,y=190-h,o=s/v,op=Math.max(.18,Math.min(1,(o-150)/450));return '<rect x="'+x+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+h.toFixed(1)+'" fill="var(--jel2)" opacity="'+op.toFixed(2)+'"/><path d="M'+x+' '+y.toFixed(1)+' h'+w+'" stroke="var(--ink)" stroke-width="2.5"/>'+
+    '<text x="'+(x+w/2)+'" y="'+(y-10).toFixed(1)+'" text-anchor="middle" font-size="13" style="fill:var(--txt)">'+v.toFixed(2).replace(/0$/,'')+' L · '+Math.round(o)+'</text><text x="'+(x+w/2)+'" y="206" text-anchor="middle" font-size="14" style="fill:var(--txt)">'+lab+'</text>';}
+  function paint(vi,ve,dir){var s='<defs>'+DEFS+'</defs><g filter="url(#czw)"><rect x="18" y="26" width="284" height="168" rx="14" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/></g>'+tank(22,136,vi,st.I.s,'I (mOsm/L)')+tank(162,136,ve,st.E.s,'E (mOsm/L)')+
+    '<path d="M160 30 V192" stroke="var(--ink)" stroke-width="3" stroke-dasharray="6 6"/>';
+    if(dir)s+='<g><path d="M'+(dir>0?128:192)+' 80 H'+(dir>0?192:128)+'" stroke="var(--ink)" stroke-width="9" stroke-linecap="round"/><path d="M'+(dir>0?128:192)+' 80 H'+(dir>0?192:128)+'" stroke="var(--nd)" stroke-width="4.5" stroke-linecap="round"/><path d="M'+(dir>0?184:136)+' 71 L'+(dir>0?196:124)+' 80 L'+(dir>0?184:136)+' 89" stroke="var(--ink)" stroke-width="3" fill="var(--nd)" stroke-linejoin="round"/><text x="160" y="66" text-anchor="middle" font-size="12" style="fill:var(--txt)">water</text></g>';
+    $(R,'[data-a=tk]').innerHTML=s;}
+  function calc(){var e=eq(),S=st.I.s+st.E.s,V=st.I.v+st.E.v;
+    $(R,'[data-a=calc]').innerHTML=msg+'<div style="margin-top:8px">Total solute <span class="n">'+S+'</span> ÷ total water <span class="n">'+V+' L</span> = <span class="n">'+Math.round(e.x)+' mOsm/L</span></div><div>I: '+st.I.s+' ÷ '+Math.round(e.x)+' = <span class="n">'+(+e.I.toFixed(2))+' L</span> · E: '+st.E.s+' ÷ '+Math.round(e.x)+' = <span class="n">'+(+e.E.toFixed(2))+' L</span></div>';}
+  function act(k){if(k==='rst'){reset();return;}
+    if(k==='sol')st.E.s+=300;if(k==='h2o')st.E.v+=1;if(k==='iso'){st.E.v+=1;st.E.s+=300;}
+    var oI=st.I.s/st.I.v,oE=st.E.s/st.E.v,e=eq(),dir=Math.abs(oI-oE)<.5?0:(oE>oI?1:-1);
+    msg=dir===0?'Both sides still match ('+Math.round(oI)+' mOsm/L), so <b>no water moves</b>. Isotonic fluid just stays in E.':'Right after: I = '+Math.round(oI)+', E = '+Math.round(oE)+' mOsm/L. Water moves <b>'+(dir>0?'from I into E':'from E into I')+'</b>, toward the higher osmolarity.';
+    var a={I:st.I.v,E:st.E.v};paint(a.I,a.E,dir);calc();
+    setTimeout(function(){ob.h=0;tween(ob,1,1100,EZ.ios,function(h){paint(a.I+(e.I-a.I)*h,a.E+(e.E-a.E)*h,h<.95?dir:0);});st.I.v=e.I;st.E.v=e.E;},700);}
+  function fick(){var v={};$$(R,'[data-f]').forEach(function(i){if(i.tagName==='INPUT')v[i.dataset.f]=+i.value||0;});
+    var r1=v.a1*v.c1/(v.t1||1),r2=v.a2*v.c2/(v.t2||1);$(R,'[data-f=r1]').textContent='Rate '+(+r1.toFixed(2));$(R,'[data-f=r2]').textContent='Rate '+(+r2.toFixed(2));
+    var q=r1&&r2?(r1>r2?r1/r2:r2/r1):0;$(R,'[data-a=fv]').innerHTML='Rate ∝ area × gradient ÷ thickness. Model 1: '+v.a1+' × '+v.c1+' ÷ '+v.t1+' = <b>'+(+r1.toFixed(2))+'</b> · Model 2: '+v.a2+' × '+v.c2+' ÷ '+v.t2+' = <b>'+(+r2.toFixed(2))+'</b> → '+(Math.abs(r1-r2)<1e-9?'<b>same rate</b>.':'Model '+(r1>r2?1:2)+' is <b>'+(+q.toFixed(2))+'×</b> faster.');}
+  R.addEventListener('click',function(e){var b=e.target.closest('[data-x]');if(b)act(b.dataset.x);});
+  R.addEventListener('input',function(e){if(e.target.dataset.f)fick();});
+  reset();fick();return R;};
+
+/* ---------- 11. FIX-IT SORTER (Mock A 504 weak spots) ---------- */
+var FIX=[
+ {name:'Classify first',bins:[{id:'b',name:'Basal lamina'},{id:'x',name:'External lamina'}],items:[
+  {n:'Goblet cell',b:'b',w:'A unicellular gland inside the epithelium: it shares the epithelial basal lamina.'},{n:'Smooth muscle cell',b:'x',w:'Non-epithelial.'},{n:'Endothelial cell',b:'b',w:'Endothelium is a simple squamous epithelium.'},{n:'Schwann cell',b:'x',w:'Non-epithelial.'},
+  {n:'Adipocyte',b:'x',w:'Non-epithelial.'},{n:'Mesothelial cell',b:'b',w:'Mesothelium is an epithelium lining cavities.'},{n:'Skeletal muscle fiber',b:'x',w:'Non-epithelial.'},{n:'Kidney tubule cell',b:'b',w:'Epithelium.'}]},
+ {name:'Cartilage by site',bins:[{id:'e',name:'Elastic + perichondrium'},{id:'h',name:'Hyaline + perichondrium'},{id:'a',name:'Hyaline, no perichondrium'},{id:'f',name:'Fibrocartilage, no perichondrium'}],items:[
+  {n:'Pinna of the ear',b:'e',w:'Elastic always has a perichondrium.'},{n:'Epiglottis',b:'e',w:'Elastic.'},{n:'Femoral head surface',b:'a',w:'Articular cartilage: hyaline, no perichondrium.'},{n:'Costal cartilage',b:'h',w:'Hyaline with perichondrium.'},
+  {n:'Tracheal ring',b:'h',w:'Hyaline with perichondrium.'},{n:'Knee meniscus',b:'f',w:'Fibrocartilage.'},{n:'Intervertebral disc (anulus)',b:'f',w:'Fibrocartilage.'},{n:'Pubic symphysis',b:'f',w:'Fibrocartilage.'}]},
+ {name:'Junction jobs',bins:[{id:'o',name:'Zonula occludens'},{id:'a',name:'Zonula adherens'},{id:'d',name:'Desmosome'},{id:'h',name:'Hemidesmosome'},{id:'g',name:'Gap junction'}],items:[
+  {n:'Seals the space between cells',b:'o',w:'Transport must go through the cells.'},{n:'Occludin, claudin, JAM',b:'o',w:'Tight junction proteins.'},{n:'Contact inhibition',b:'a',w:'E-cadherin belt.'},{n:'E-cadherin + actin belt',b:'a',w:'Zonula adherens.'},
+  {n:'Keratin spot weld',b:'d',w:'Macula adherens.'},{n:'Pemphigus vulgaris (desmoglein)',b:'d',w:'Intraepidermal blisters.'},{n:'Bullous pemphigoid (BP180)',b:'h',w:'Subepidermal blisters.'},{n:'Anchors cell to laminin',b:'h',w:'Integrins at the basal surface.'},{n:'Connexons couple cells',b:'g',w:'Electrical and metabolic coupling.'}]},
+ {name:'Organelle jobs',bins:[{id:'r',name:'Rough ER'},{id:'g',name:'Golgi'},{id:'s',name:'Smooth ER'},{id:'p',name:'Peroxisome'},{id:'n',name:'Nucleolus'}],items:[
+  {n:'N-linked glycosylation (asparagine)',b:'r',w:'Initial glycosylation.'},{n:'O-linked glycosylation (Ser/Thr)',b:'g',w:'Terminal glycosylation.'},{n:'Mannose-6-phosphate tag',b:'g',w:'Sorting lysosomal enzymes.'},{n:'Steroid synthesis',b:'s',w:'With tubular-cristae mitochondria.'},
+  {n:'Drug detoxification',b:'s',w:'Hepatocyte SER.'},{n:'Very-long-chain fatty acid oxidation',b:'p',w:'Catalase and oxidases.'},{n:'Bile acid synthesis',b:'p',w:'Peroxisome.'},{n:'rRNA synthesis',b:'n',w:'18S, 28S, 5.8S.'},{n:'Ribosomal subunit assembly',b:'n',w:'rRNA + imported proteins.'}]},
+ {name:'Cell-cycle switches',bins:[{id:'g1',name:'G1 brake'},{id:'b2',name:'G2/M brake'},{id:'go',name:'G2/M go'},{id:'p53',name:'DNA-damage (p53) team'}],items:[
+  {n:'p16',b:'g1',w:'Inhibits cyclin D–CDK4/6.'},{n:'Rb holding E2F',b:'g1',w:'Hypophosphorylated Rb blocks S phase.'},{n:'Wee1 kinase',b:'b2',w:'Adds the inhibitory phosphate to CDK1.'},{n:'Cdc25C phosphatase',b:'go',w:'Removes the inhibitory phosphate from CDK1.'},
+  {n:'p53',b:'p53',w:'Guardian of the genome.'},{n:'p21',b:'p53',w:'CDK inhibitor switched on by p53.'},{n:'MDM2',b:'p53',w:'Ubiquitinates p53 for degradation.'},{n:'ATM kinase',b:'p53',w:'Senses double-strand breaks, activates p53.'}]},
+ {name:'Chromosomes & DNA',bins:[{id:'a',name:'46 · 2N'},{id:'b',name:'46 · 4N'},{id:'c',name:'23 · 2N'},{id:'d',name:'23 · N'}],items:[
+  {n:'Spermatogonium',b:'a',w:'Diploid stem cell.'},{n:'Primary spermatocyte, end of S',b:'b',w:'Chromatids doubled; count unchanged.'},{n:'Secondary spermatocyte',b:'c',w:'Homologs separated; chromatids still paired.'},{n:'Spermatid',b:'d',w:'After meiosis II.'},
+  {n:'Oocyte arrested in diplotene',b:'b',w:'Paused in prophase I.'},{n:'Secondary oocyte at ovulation',b:'c',w:'Paused in metaphase II.'},{n:'Mature sperm',b:'d',w:'Haploid.'}]}];
+M.cozy.fixit=function(id){return M.cozy.sort(id,{chip:'Fix-it sorter',title:'Mock A weak spots',sub:'Six decks built from your 504 misses. Switch with the tabs.',tabs:FIX,src:'Dr. Mamata · L04, L05, L09, L13, L17, L18, L31 · Mock A 504 misses'});};
+
+M.cozy.v='1.2.0';
 })();
