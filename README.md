@@ -9,6 +9,8 @@ Public helper code that Claude loads into chat widgets during study sessions, so
   `https://cdn.jsdelivr.net/gh/yinkev/_claude@01c1f4c5a18e460fce297635a4aeffe5ad8325b3/cards/card.js`  (v1.1.0)
 - `cards/body.js`: body map. Front + back dermatome figure with a spine panel (vertebrae, roots, cord end, landmarks, reflexes, disc rule). Separate file so `card.js` stays small; works alone or with `card.js`, in either load order:
   `<script src="https://cdn.jsdelivr.net/gh/yinkev/_claude@2598948377d26bcd4c2a1c8a0ceaa63a2a3a3dac/cards/body.js"></script>`
+- `cards/lab.js`: study lab. Interactive teaching widgets (sliders, simulators, sorters) that work alone or with `card.js` / `body.js`:
+  `MUA.lab.disc(id)` disc herniation simulator (root, skin, muscle, reflex, body map) · `MUA.lab.oocyte(id)` egg cell life clock · `MUA.lab.week1(id)` first week + fertilization steps · `MUA.lab.fetal(id)` blood-making site + placental barrier by week · `MUA.lab.crest(id)` neural crest sorter · `MUA.lab.defects(id)` AFP and defect-type sorter · `MUA.lab.injury(id)` injury → nerve board · `MUA.lab.sort(id,{title,bins,items})` any custom sorter.
 
 ## API (all data-only; the engine draws everything)
 | Call | What it draws |
