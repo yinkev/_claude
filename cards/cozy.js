@@ -1,9 +1,11 @@
-/* _claude cozy anatomy v1.0.0 — "Cozy Anatomy" design system + teaching widgets.
+/* _claude cozy anatomy v1.1.0 — "Cozy Anatomy" design system + teaching widgets.
    Chunky outlines, jelly discs, noodle nerves with DRG beads, press-down buttons, sticker labels, inventory tiles.
    <div id="x"></div>
    <script src="https://cdn.jsdelivr.net/gh/yinkev/_claude@<COMMIT>/cards/cozy.js"></script>
    <script>MUA.cozy.disc('x')</script>
    Widgets: disc (herniation → root, with arm/leg dermatome) · injury (lower-limb nerve detective, front/back legs)
+            oocyte (egg cell life clock) · week1 (first week + fertilization) · fetal (blood-making site + placental barrier)
+            crest (neural crest sorter) · defects (AFP / defect-type sorter) · sort(id,{title,bins,items,tabs?}) any sorter
    Generic teaching content only. No personal data lives here. */
 (function(){
 var M=window.MUA=window.MUA||{};M.cozy=M.cozy||{};if(M.cozy.v)return;
@@ -249,5 +251,229 @@ M.cozy.injury=function(id){
     if(e.target.closest('[data-a=quiz]'))ask();});
   show(0);return R;};
 
-M.cozy.v='1.0.0';
+/* ===================== batch 2: embryology ===================== */
+var CSS2=`
+.cz{--pink:#FFC9D6;--liver:#C8765A;--chr:#FF8FB1;--blood:#FFB3AC;--fblood:#C4D6FF}
+@media (prefers-color-scheme:dark){.cz{--pink:#E6A2B7;--liver:#B8664C;--fblood:#9DB6F0}}
+.cz .tk{position:relative;height:22px;margin-top:2px;font:600 11.5px/1 Fredoka,sans-serif;color:var(--mut)}
+.cz .tk span{position:absolute;top:4px;transform:translateX(-50%);white-space:nowrap;transition:color .2s}
+.cz .tk span:first-child{transform:translateX(-16px)}.cz .tk span:last-child{transform:translateX(calc(-100% + 16px))}
+.cz .tk span.on{color:var(--txt)}
+.cz .sldr{margin-top:14px}.cz .sldr .top{display:flex;justify-content:space-between;align-items:baseline;font:600 15px/1 Fredoka,sans-serif;margin-bottom:2px}
+.cz .sldr .top b{font-weight:600;color:var(--ouch)}
+.cz .orgs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.cz .org{background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:0 4px 0 var(--shd);padding:8px 6px 8px;text-align:center;font:600 13.5px/1.1 Fredoka,sans-serif;position:relative;opacity:.45;transition:opacity .3s,transform .45s cubic-bezier(.3,1.6,.5,1),background .3s}
+.cz .org svg{width:100%;max-width:92px;height:auto;margin:0 auto 4px}
+.cz .org.on{opacity:1;background:#FFF1C9;color:#2E2418;transform:translateY(-4px) rotate(-1.5deg)}
+.cz .org.on:after{content:"Now!";position:absolute;top:-12px;right:-6px;font:600 12px/1 Fredoka,sans-serif;background:var(--ouch);color:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:5px 9px 4px;transform:rotate(6deg)}
+.cz .lyr{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.cz .ly{border:2.5px solid var(--ink);border-radius:12px;padding:7px 10px;font:600 13px/1.1 Fredoka,sans-serif;color:#2E2418;text-align:center;max-height:44px;overflow:hidden;transition:max-height .45s cubic-bezier(.32,.72,0,1),opacity .3s,padding .45s,margin .45s,border-width .2s}
+.cz .ly.gone{max-height:0;opacity:0;padding-top:0;padding-bottom:0;margin-top:-6px;border-width:0}
+.cz .ly.edge{border-style:dashed;opacity:.85}
+.cz .deck{position:relative;margin-top:16px;isolation:isolate}
+.cz .deck:before,.cz .deck:after{content:"";position:absolute;inset:0;background:var(--card);border:3px solid var(--ink);border-radius:22px;z-index:-1}
+.cz .deck:before{transform:rotate(-3deg) translateY(6px)}.cz .deck:after{transform:rotate(2.5deg) translateY(3px)}
+.cz .dcard{background:var(--card);border:3px solid var(--ink);border-radius:22px;box-shadow:0 5px 0 var(--shd);min-height:124px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:18px 16px;gap:6px}
+.cz .dcard .w{font:600 25px/1.15 Fredoka,sans-serif;letter-spacing:-.01em}
+.cz .bins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+.cz .bins .bin:last-child:nth-child(odd){grid-column:1/-1}
+.cz .bin{font:600 15px/1.1 Fredoka,sans-serif;color:#2E2418;border:3px solid var(--ink);border-radius:16px;padding:13px 10px 12px;box-shadow:0 4px 0 var(--shd);transition:transform .12s,box-shadow .12s,filter .2s}
+.cz .bin:active{transform:translateY(3px);box-shadow:0 1px 0 var(--shd)}.cz .bin:disabled{filter:saturate(.3) opacity(.55)}
+.cz .bin.ok{filter:none;background:var(--leaf)!important;transform:translateY(-3px) rotate(-1deg)}.cz .bin.no{filter:none;background:var(--ouch)!important;color:#fff}
+.cz .prog{height:16px;border:3px solid var(--ink);border-radius:9px;background:var(--card);overflow:hidden;margin-top:14px;box-shadow:0 2px 0 var(--shd)}
+.cz .prog i{display:block;height:100%;background:var(--leaf);border-right:3px solid var(--ink);transition:width .5s cubic-bezier(.3,1.4,.5,1)}
+.cz .prog i[style*="width: 0"],.cz .prog i[style*="width:0"]{border-right:0}
+.cz .fbk{display:flex;gap:10px;align-items:center;margin-top:16px;background:var(--card);border:3px solid var(--ink);border-radius:18px;padding:10px 12px;box-shadow:0 4px 0 var(--shd);font-size:14px;line-height:1.35}
+.cz .fbk .rs{width:30px;height:30px;border-radius:50%;border:2.5px solid var(--ink);display:grid;place-items:center;color:#fff;font:600 16px/1 Fredoka,sans-serif;flex:none}
+.cz .fbk .gx{flex:1;min-width:0}.cz .fbk b{font-family:Fredoka,sans-serif;font-weight:600}
+.cz .scr{font:600 13px/1 Fredoka,sans-serif;background:var(--card);border:2.5px solid var(--ink);border-radius:999px;padding:6px 11px 5px;box-shadow:0 3px 0 var(--shd);margin-left:auto}
+.cz .hrow{display:flex;align-items:center;gap:10px}
+.cz .stp{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.cz .rnd{width:44px;height:44px;border-radius:50%;border:3px solid var(--ink);background:var(--card);box-shadow:0 4px 0 var(--shd);font:600 18px/1 Fredoka,sans-serif;transition:transform .12s,box-shadow .12s}
+.cz .rnd:active{transform:translateY(3px);box-shadow:0 1px 0 var(--shd)}
+.cz .dots{display:flex;gap:7px}.cz .dots i{width:11px;height:11px;border-radius:50%;border:2.5px solid var(--ink);background:var(--card);transition:background .25s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.cz .dots i.on{background:var(--nd);transform:scale(1.25)}
+.cz .res.wk{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}@media (max-width:520px){.cz .res.wk{grid-template-columns:minmax(0,1fr)}}
+.cz .num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--nd);border:2.5px solid var(--ink);font:600 14px/1 Fredoka,sans-serif;color:#2E2418;margin-right:8px;vertical-align:middle}`;
+function boot2(){boot();if(document.getElementById('cz-css2'))return;var s=document.createElement('style');s.id='cz-css2';s.textContent=CSS2;document.head.appendChild(s);}
+function ticks(a){return '<div class="tk">'+a.map(function(t){return '<span style="left:calc(16px + (100% - 32px)*'+t[0]+')">'+t[1]+'</span>';}).join('')+'</div>';}
+function onTick(R,i){$$(R,'.tk span').forEach(function(t,j){t.classList.toggle('on',j===i);});}
+function cap(x,y,rot,len){len=len||22;return '<g transform="rotate('+rot+' '+x+' '+y+')"><path d="M'+x+' '+(y-len/2)+' V'+(y+len/2)+'" stroke="var(--ink)" stroke-width="9" stroke-linecap="round"/><path d="M'+x+' '+(y-len/2)+' V'+(y+len/2)+'" stroke="var(--chr)" stroke-width="4.6" stroke-linecap="round"/></g>';}
+function X(x,y,l){return cap(x,y,28,l)+cap(x,y,-28,l);}
+
+/* ---------- 3. EGG CELL LIFE CLOCK ---------- */
+var OO=[
+ {w:'Fetal months 3–5',n:'Oogonium',s:'Dividing by mitosis. Numbers peak near 7 million in month 5.',c:'46',dna:'2N',ch:'mit',st:'Dividing',ok:1},
+ {w:'Before birth',n:'Primary oocyte',s:'Starts meiosis I, crosses over in pachytene, then stops in <b>diplotene of prophase I</b>.',c:'46',dna:'4N',ch:'tet',st:'Arrest 1 · diplotene'},
+ {w:'Birth',n:'Primary oocyte',s:'About 600–800 thousand left, all still paused in diplotene.',c:'46',dna:'4N',ch:'tet',st:'Still paused'},
+ {w:'Puberty',n:'Primary oocyte',s:'About 40 thousand left. Each cycle FSH recruits 15–20 follicles; one wins.',c:'46',dna:'4N',ch:'tet',st:'Still paused'},
+ {w:'LH surge',n:'Secondary oocyte',s:'The LH surge finishes <b>meiosis I</b> (homologs separate, 1st polar body out) and triggers ovulation.',c:'23',dna:'2N',ch:'dy',pb:1,zona:1,st:'Meiosis I done',ok:1},
+ {w:'Ovulated',n:'Secondary oocyte',s:'Stops again in <b>metaphase II</b>, wrapped in zona pellucida and corona radiata, and travels to the ampulla.',c:'23',dna:'2N',ch:'met',pb:1,zona:1,cr:1,st:'Arrest 2 · metaphase II'},
+ {w:'Fertilized',n:'Zygote',s:'Sperm entry finishes <b>meiosis II</b> (2nd polar body out). Two pronuclei make a 46-chromosome zygote.',c:'46',dna:'2N',ch:'pro',pb:2,zona:1,st:'Meiosis II done',ok:1}];
+function eggSVG(x){var cx=124,cy=114,r=x.ch==='mit'?58:x.zona?64:74,s='<svg class="fig" viewBox="0 0 260 246" style="max-width:300px;overflow:visible" role="img" aria-label="'+x.n+'"><defs>'+DEFS+'</defs><g filter="url(#czw)">';
+  if(x.cr){for(var k=0;k<22;k++){var a=k/22*Math.PI*2;s+='<circle cx="'+(cx+Math.cos(a)*104).toFixed(1)+'" cy="'+(cy+Math.sin(a)*104).toFixed(1)+'" r="'+(k%2?8:9.5)+'" fill="var(--bone2)" stroke="var(--ink)" stroke-width="2.2"/>';}
+    }if(x.zona)s+='<circle cx="'+cx+'" cy="'+cy+'" r="92" fill="var(--bone)" stroke="var(--ink)" stroke-width="3"/><circle cx="'+cx+'" cy="'+cy+'" r="81" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>';
+  s+='<circle cx="'+cx+'" cy="'+(cy+4)+'" r="'+r+'" fill="var(--shd)" opacity=".14"/><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="var(--sac)" stroke="var(--ink)" stroke-width="3"/><path d="M'+(cx-r*.62)+' '+(cy-r*.5)+' Q'+(cx-r*.3)+' '+(cy-r*.82)+' '+(cx+r*.05)+' '+(cy-r*.84)+'" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".75"/>';
+  if(/tet|mit|dy/.test(x.ch))s+='<circle cx="'+cx+'" cy="'+cy+'" r="34" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/>';
+  if(x.ch==='tet')s+=X(cx-14,cy-8,20)+X(cx-2,cy-8,20)+X(cx+4,cy+12,20)+X(cx+16,cy+12,20);
+  else if(x.ch==='mit')s+=cap(cx-12,cy-3,10,18)+cap(cx,cy+7,-14,18)+cap(cx+12,cy-5,6,18);
+  else if(x.ch==='dy')s+=X(cx-10,cy,20)+X(cx+12,cy,20);
+  else if(x.ch==='met')s+='<path d="M'+(cx-40)+' '+cy+' Q'+cx+' '+(cy-36)+' '+(cx+40)+' '+cy+' Q'+cx+' '+(cy+36)+' '+(cx-40)+' '+cy+'" stroke="var(--ink)" stroke-width="1.6" fill="none" opacity=".5"/>'+X(cx,cy-9,17)+X(cx,cy+9,17);
+  else if(x.ch==='pro')s+='<circle cx="'+(cx-19)+'" cy="'+cy+'" r="17" fill="var(--pink)" stroke="var(--ink)" stroke-width="2.5"/><circle cx="'+(cx+19)+'" cy="'+cy+'" r="17" fill="var(--fblood)" stroke="var(--ink)" stroke-width="2.5"/><text x="'+(cx-19)+'" y="'+(cy+5)+'" text-anchor="middle" font-size="14" style="fill:#2E2418">♀</text><text x="'+(cx+19)+'" y="'+(cy+5)+'" text-anchor="middle" font-size="14" style="fill:#2E2418">♂</text>';
+  if(x.pb){s+='<circle cx="174" cy="62" r="9.5" fill="var(--jel)" stroke="var(--ink)" stroke-width="2.5"/>';if(x.pb===2)s+='<circle cx="190" cy="82" r="7" fill="var(--jel)" stroke="var(--ink)" stroke-width="2.5"/>';}
+  s+='</g>';if(x.ch==='mit')s+='<path d="M52 114 h-22 m8 -7 l-8 7 8 7 M196 114 h22 m-8 -7 l8 7 -8 7" stroke="var(--ink)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+  if(x.pb)s+='<path d="M182 52 L204 26" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>'+tag(214,16,x.pb===2?'2 polar bodies':'polar body');if(x.zona)s+=tag(124,236,x.cr?'zona + corona radiata':'zona pellucida');return s+'</svg>';}
+M.cozy.oocyte=function(id){boot2();
+  var labs=['Fetal','Prenatal','Birth','Puberty','LH','Ovul.','Zygote'];
+  var R=mount(id,'<span class="chip">Egg clock</span><h3>Egg cell life clock</h3><div class="sub">Drag through her whole life. Watch the two pauses.</div>'+
+   '<div class="sldr"><input type="range" min="0" max="6" step="1" value="1" aria-label="Life stage">'+ticks(labs.map(function(l,i){return [i/6,l];}))+'</div>'+
+   '<div class="segs"><button class="pill" data-w="lh">What if the LH surge is blocked?</button><button class="pill" data-w="nf">What if no sperm arrives?</button></div>'+
+   '<div class="stage" data-a="st" style="display:flex;justify-content:center"></div><div class="bub" data-a="bub"></div>'+
+   '<div class="inv" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:14px"><div class="slot" data-a="c"></div><div class="slot" data-a="d"></div><div class="slot" data-a="z"></div></div>'+
+   '<div class="foot">Dr. Shrestha · L03–L05, L10 · practice Q: “block the LH surge → blocks completion of meiosis I”</div>');
+  if(!R)return;var sl=$(R,'input');
+  function show(i,note,w){var x=OO[i];sl.value=i;onTick(R,i);$$(R,'[data-w]').forEach(function(b){b.classList.toggle('on',b.dataset.w===w);});
+    var st=$(R,'[data-a=st]');st.innerHTML=eggSVG(x);jig(st.querySelector('svg'));
+    $(R,'[data-a=bub]').innerHTML='<span class="lab">'+x.w+'</span><div class="q" style="margin:3px 0 4px">'+x.n+'</div>'+x.s+(note?'<div class="slot" style="margin-top:10px;background:#FFF;color:#2E2418;border-style:dashed"><i style="color:#9A7D66">What happens</i>'+note+'</div>':'');
+    $(R,'[data-a=c]').innerHTML='<i>Chromosomes</i><span style="font:600 22px/1 Fredoka,sans-serif">'+x.c+'</span>';$(R,'[data-a=d]').innerHTML='<i>DNA</i><span style="font:600 22px/1 Fredoka,sans-serif">'+x.dna+'</span>';
+    var z=$(R,'[data-a=z]');z.className='slot '+(x.ok?'ok':'bad');z.innerHTML='<i>Status</i>'+x.st;}
+  sl.oninput=function(){show(+sl.value);};
+  R.addEventListener('click',function(e){var b=e.target.closest('[data-w]');if(!b)return;
+    if(b.dataset.w==='lh')show(3,'No LH surge = meiosis I never finishes. The follicle keeps a <b>primary oocyte in diplotene</b>, and there is no ovulation.','lh');
+    else show(5,'No fertilization = meiosis II never finishes. The <b>secondary oocyte</b> degenerates within about a day.','nf');});
+  show(1);return R;};
+
+/* ---------- 4. FIRST WEEK ---------- */
+var WK=[
+ {t:'Fertilization',s:'In the ampulla. Two pronuclei, still inside the zona.',k:'zyg'},
+ {t:'2-cell stage',s:'Cleavage: more cells, same total size.',k:'c2'},
+ {t:'4-cell stage',s:'Still rolling down the tube.',k:'c4'},
+ {t:'Morula',s:'About 16 packed cells. Reaches the uterus.',k:'mor'},
+ {t:'Blastocyst',s:'A fluid cavity opens: inner cell mass + trophoblast ring.',k:'bla'},
+ {t:'Blastocyst hatches',s:'The zona disappears so it can stick.',k:'hat'},
+ {t:'Implantation begins',s:'The embryonic pole attaches, usually in the upper uterine body.',k:'imp'},
+ {t:'Trophoblast invades',s:'Syncytiotrophoblast digs in and makes hCG; cytotrophoblast keeps dividing.',k:'inv'}];
+var FZ=[
+ {t:'Capacitation',s:'In the female tract (~7 h) the glycoprotein coat and seminal proteins come off the sperm head.'},
+ {t:'Through the corona radiata',s:'Hyaluronidase from the acrosome loosens the follicle cells around the egg.'},
+ {t:'Through the zona pellucida',s:'Binding ZP3 fires the acrosome reaction. Acrosin digests a path through the zona.'},
+ {t:'Fusion, cortical reaction',s:'The membranes fuse and cortical granules spill into the perivitelline space.'},
+ {t:'Zona reaction',s:'Granule enzymes change ZP2/ZP3 so no more sperm can bind: the block to polyspermy. Meiosis II finishes.'}];
+function embSVG(k){var s='<svg class="fig" viewBox="14 -8 192 206" style="max-width:250px;overflow:visible" role="img" aria-label="Embryo"><defs>'+DEFS+'</defs><g filter="url(#czw)">',cx=110,cy=94,zona=!/hat|imp|inv/.test(k),down=/imp|inv/.test(k);
+  function cell(x,y,r,f){return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+(f||'var(--sac)')+'" stroke="var(--ink)" stroke-width="2.5"/>';}
+  if(down){cy=74;s+='<path d="M-6 132 Q22 120 50 132 T106 132 T162 132 T226 132 V204 H-6 Z" fill="var(--pink)" stroke="var(--ink)" stroke-width="3"/>';[30,80,136,186].forEach(function(x){s+='<path d="M'+x+' 150 q-6 12 0 22 q6 10 0 20" stroke="var(--ink)" stroke-width="7" fill="none" stroke-linecap="round" opacity=".8"/><path d="M'+x+' 150 q-6 12 0 22 q6 10 0 20" stroke="#FFE3EA" stroke-width="3.2" fill="none" stroke-linecap="round"/>';});}
+  if(zona)s+='<circle cx="'+cx+'" cy="'+cy+'" r="72" fill="none" stroke="var(--ink)" stroke-width="15"/><circle cx="'+cx+'" cy="'+cy+'" r="72" fill="none" stroke="var(--bone)" stroke-width="9"/>';
+  if(k==='zyg')s+=cell(cx,cy,58)+cell(cx-17,cy,12,'var(--pink)')+cell(cx+17,cy,12,'var(--fblood)');
+  else if(k==='c2')s+=cell(cx-28,cy,29)+cell(cx+28,cy,29);
+  else if(k==='c4')s+=cell(cx-24,cy-22,24)+cell(cx+24,cy-22,24)+cell(cx-24,cy+22,24)+cell(cx+24,cy+22,24);
+  else if(k==='mor')[[0,-50],[35,-35],[48,0],[35,35],[0,50],[-35,35],[-48,0],[-35,-35],[0,-26],[23,-13],[23,13],[0,26],[-23,13],[-23,-13],[0,0],[12,-2]].forEach(function(p){s+=cell(cx+p[0],cy+p[1],15);});
+  else{s+='<circle cx="'+cx+'" cy="'+cy+'" r="54" fill="var(--jel)" opacity=".55"/>';
+    for(var q=0;q<18;q++){var a=q/18*Math.PI*2,px=(cx+Math.cos(a)*54).toFixed(1),py=(cy+Math.sin(a)*54).toFixed(1);s+='<ellipse cx="'+px+'" cy="'+py+'" rx="11" ry="7" transform="rotate('+(a*180/Math.PI+90).toFixed(0)+' '+px+' '+py+')" fill="var(--sac)" stroke="var(--ink)" stroke-width="2.2"/>';}
+    var iy=cy+(down?30:-30);[[-13,0],[0,-7],[13,0],[-7,10],[7,10],[0,2]].forEach(function(p){s+=cell(cx+p[0],iy+(down?-p[1]:p[1]),8.5,'var(--leaf)');});
+    if(k==='inv')[[82,126,74,160],[110,132,108,172],[138,126,148,160]].forEach(function(f){var d='M'+f[0]+' '+f[1]+' Q'+(f[0]-6)+' '+(f[1]+16)+' '+f[2]+' '+f[3];s+='<path d="'+d+'" stroke="var(--ink)" stroke-width="12" fill="none" stroke-linecap="round"/><path d="'+d+'" stroke="var(--bone2)" stroke-width="7" fill="none" stroke-linecap="round"/>';});}
+  s+='</g>';if(/bla|hat|imp|inv/.test(k))s+=tag(cx,down?-2:16,'inner cell mass','var(--leaf)')+(k==='bla'?tag(cx,190,'trophoblast ring'):'');if(down)s+=tag(186,186,'endometrium');return s+'</svg>';}
+M.cozy.week1=function(id){boot2();
+  var P=[[40,70],[92,52],[150,44],[222,52],[300,74],[372,96],[440,108],[486,104]],tp='M20 78 C70 36 150 30 220 46 S340 92 420 104 L500 96';
+  var tube='<svg class="fig" viewBox="0 0 520 132" aria-hidden="true"><defs>'+DEFS+'</defs><g filter="url(#czw)"><path d="'+tp+'" fill="none" stroke="var(--ink)" stroke-width="32" stroke-linecap="round"/><path d="'+tp+'" fill="none" stroke="var(--pink)" stroke-width="25" stroke-linecap="round"/>'+
+   [[-30],[-10],[12],[34]].map(function(a,i){var ang=(160+a[0])*Math.PI/180,x2=20+Math.cos(ang)*26,y2=78+Math.sin(ang)*26;return '<path d="M20 78 L'+x2.toFixed(1)+' '+y2.toFixed(1)+'" stroke="var(--ink)" stroke-width="11" stroke-linecap="round"/><path d="M20 78 L'+x2.toFixed(1)+' '+y2.toFixed(1)+'" stroke="var(--pink)" stroke-width="5" stroke-linecap="round"/>';}).join('')+
+   '<path d="'+tp+'" fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="2 9" stroke-linecap="round" opacity=".35"/></g>'+
+   P.map(function(p){return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3.5" fill="var(--ink)" opacity=".35"/>';}).join('')+
+   '<g data-a="dot" style="transition:transform .6s cubic-bezier(.3,1.5,.5,1)"><circle r="17" fill="var(--nd)" opacity=".45"/><circle r="11" fill="var(--sac)" stroke="var(--ink)" stroke-width="3"/><path d="M-5 -4 Q-2 -7 2 -7" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></g></svg>';
+  var R=mount(id,'<div class="hrow"><span class="chip">Week 1</span><span class="scr" data-a="day">Day 0</span></div><h3>First week</h3><div class="sub">Roll from the ampulla to the uterine wall.</div>'+
+   '<div class="stage">'+tube+'<div class="hrow" style="justify-content:space-between;font:600 13px/1 Fredoka,sans-serif;color:var(--mut);padding:0 4px 6px"><span>Ampulla</span><span>Isthmus</span><span>Uterus</span></div></div>'+
+   '<div class="sldr"><input type="range" min="0" max="7" step="1" value="0" aria-label="Day after fertilization">'+ticks([0,1,2,3,4,5,6,7].map(function(d){return [d/7,'Day '+d];}).map(function(t,i){return [t[0],i%7===0?t[1]:String(i)];}))+'</div>'+
+   '<div class="res wk"><div class="card" style="display:grid;align-items:center"><div data-a="emb" style="width:100%"></div></div><div class="card"><div class="lab" data-a="dl"></div><div class="nm" data-a="tt"></div><div data-a="tx" style="font-size:14px"></div><div class="stack" style="margin-top:10px"><div class="slot"><i>Day 3</i>Morula</div><div class="slot"><i>Days 4–5</i>Blastocyst</div><div class="slot"><i>Days 6–7</i>Implants</div></div></div></div>'+
+   '<div class="hd2">Fertilization, step by step</div><div class="card" style="margin-top:10px"><div data-a="fz"></div><div class="stp"><button class="rnd" data-f="-1" aria-label="Previous step">‹</button><div class="dots">'+FZ.map(function(){return '<i></i>';}).join('')+'</div><button class="rnd" data-f="1" aria-label="Next step">›</button></div></div>'+
+   '<div class="foot">Dr. Shrestha · L10 (“three days… sixteen cell stages”, “implantation six, seven days”) · deck s28</div>');
+  if(!R)return;var sl=$(R,'input'),fi=0;
+  function show(i){var x=WK[i];sl.value=i;onTick(R,i);$(R,'[data-a=day]').textContent='Day '+i;$(R,'[data-a=dot]').style.transform='translate('+P[i][0]+'px,'+P[i][1]+'px)';
+    var e=$(R,'[data-a=emb]');e.innerHTML=embSVG(x.k);jig(e.querySelector('svg'));$(R,'[data-a=dl]').textContent='Day '+i;$(R,'[data-a=tt]').textContent=x.t;$(R,'[data-a=tx]').textContent=x.s;
+    $$(R,'.res .slot').forEach(function(s,j){s.className='slot'+((j===0&&i===3)||(j===1&&(i===4||i===5))||(j===2&&i>=6)?' ok':'');});}
+  function fz(){var x=FZ[fi],el=$(R,'[data-a=fz]');el.innerHTML='<div class="in"><span class="num">'+(fi+1)+'</span><span style="font:600 17px/1.2 Fredoka,sans-serif;vertical-align:middle">'+x.t+'</span><div style="margin-top:8px;font-size:14.5px">'+x.s+'</div></div>';$$(R,'.dots i').forEach(function(d,j){d.classList.toggle('on',j===fi);});}
+  sl.oninput=function(){show(+sl.value);};
+  R.addEventListener('click',function(e){var b=e.target.closest('[data-f]');if(b){fi=Math.max(0,Math.min(FZ.length-1,fi+(+b.dataset.f)));fz();}});
+  show(0);fz();return R;};
+
+/* ---------- 5. FETAL AGE ---------- */
+var ORG={
+ ys:'<svg viewBox="0 0 90 90"><g filter="url(#czw)"><path d="M45 62 C45 72 40 78 44 88" stroke="var(--ink)" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M45 62 C45 72 40 78 44 88" stroke="var(--nd)" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="45" cy="36" r="27" fill="var(--nd)" stroke="var(--ink)" stroke-width="3"/><path d="M29 26 Q35 16 46 15" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/></g></svg>',
+ lv:'<svg viewBox="0 0 90 90"><g filter="url(#czw)"><path d="M10 46 C8 26 34 16 62 20 C82 23 88 36 80 50 C72 64 50 72 28 68 C16 65 11 57 10 46 Z" fill="var(--liver)" stroke="var(--ink)" stroke-width="3"/><path d="M50 22 C48 36 46 50 40 66" stroke="var(--ink)" stroke-width="2" fill="none" opacity=".45"/><path d="M20 38 Q26 28 38 26" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".55"/></g></svg>',
+ bm:'<svg viewBox="0 0 90 90"><g filter="url(#czw)"><g fill="var(--bone)" stroke="var(--ink)" stroke-width="3"><circle cx="20" cy="34" r="11"/><circle cx="20" cy="56" r="11"/><circle cx="70" cy="34" r="11"/><circle cx="70" cy="56" r="11"/><rect x="18" y="34" width="54" height="22" rx="9"/></g><g fill="var(--bone)"><circle cx="20" cy="34" r="8.5"/><circle cx="20" cy="56" r="8.5"/><circle cx="70" cy="34" r="8.5"/><circle cx="70" cy="56" r="8.5"/><rect x="19" y="36" width="52" height="18" rx="8"/></g><rect x="28" y="40" width="34" height="10" rx="5" fill="var(--ouch)" stroke="var(--ink)" stroke-width="2"/></g></svg>'};
+M.cozy.fetal=function(id){boot2();
+  var R=mount(id,'<div class="hrow"><span class="chip">Blood factory</span></div><h3>Fetal age</h3><div class="sub">Slide the week. See where blood is made and what a drug must cross.</div>'+
+   '<svg width="0" height="0" style="position:absolute"><defs>'+DEFS+'</defs></svg>'+
+   '<div class="sldr"><div class="top"><span>Gestational age</span><b data-a="age">Week 20</b></div><input type="range" min="3" max="40" step="1" value="20" aria-label="Gestational week">'+ticks([[0,'3'],[5/37,'8'],[14/37,'17'],[27/37,'30'],[1,'40']])+'</div>'+
+   '<div class="orgs"><div class="org" data-o="0">'+ORG.ys+'Yolk sac</div><div class="org" data-o="1">'+ORG.lv+'Liver</div><div class="org" data-o="2">'+ORG.bm+'Bone marrow</div></div>'+
+   '<div class="stage"><svg class="fig" data-a="gantt" viewBox="0 0 320 150" style="max-width:520px"></svg></div>'+
+   '<div class="res" style="grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)"><div class="card"><div class="lab">Placental barrier</div><div class="big" data-a="nl" style="font-size:40px">2</div><div style="font:600 14px/1.2 Fredoka,sans-serif;color:var(--mut)">layers a drug must cross</div></div>'+
+   '<div class="card"><div class="lyr"><div class="ly edge" style="background:var(--blood)">Maternal blood</div><div class="ly" style="background:var(--sac)">Syncytiotrophoblast</div><div class="ly" data-l="c" style="background:#E9DAF7">Cytotrophoblast</div><div class="ly" data-l="t" style="background:var(--jel)">Villous connective tissue</div><div class="ly" style="background:#D6EFF7">Fetal capillary endothelium</div><div class="ly edge" style="background:var(--fblood)">Fetal blood</div></div></div></div>'+
+   '<div class="bub" data-a="note"></div>'+
+   '<div class="foot">Dr. Shrestha · L17 00:45:54 (yolk sac wk 3–8 → liver months 2–7 → marrow after month 7) · L17 01:27:07 (four layers → two)</div>');
+  if(!R)return;var sl=$(R,'input');
+  function X(w){return 104+(w-3)/37*204;}
+  function bar(y,a,b,col,on){var d='M'+X(a)+' '+y+' H'+X(b);return '<path d="'+d+'" stroke="var(--ink)" stroke-width="15" stroke-linecap="round" opacity="'+(on?1:.3)+'"/><path d="'+d+'" stroke="'+col+'" stroke-width="9" stroke-linecap="round" opacity="'+(on?1:.45)+'"/>';}
+  function draw(w){var mo=(w/4.33).toFixed(1),si=w<=8?0:w<=30?1:2,early=w<17;$(R,'[data-a=age]').textContent='Week '+w+' · month '+mo;
+    $$(R,'.tk span').forEach(function(t){t.classList.toggle('on',+t.textContent===w);});
+    $$(R,'[data-o]').forEach(function(o){o.classList.toggle('on',+o.dataset.o===si);});
+    var rows=[['Yolk sac',3,8,'var(--nd)',si===0],['Liver',6,30,'var(--liver)',si===1],['Bone marrow',27,40,'var(--ouch)',si===2],['Spleen',10,28,'var(--mut)',false]],g='';
+    rows.forEach(function(r,i){var y=22+i*30;g+='<text x="0" y="'+(y+5)+'" font-size="14" style="fill:var(--'+(r[4]?'txt':'mut')+')">'+r[0]+'</text>'+bar(y,r[1],r[2],r[3],r[4]);});
+    g+='<text x="0" y="146" font-size="11.5" style="fill:var(--mut)">Spleen helps, but it’s never the “principal site” answer</text>';
+    g+='<path d="M'+X(w)+' 8 V122" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/><rect x="'+(X(w)-17)+'" y="-6" width="34" height="20" rx="10" fill="var(--nd)" stroke="var(--ink)" stroke-width="2.5"/><text x="'+X(w)+'" y="9" text-anchor="middle" font-size="12" style="fill:#2E2418">'+w+'</text>';
+    $(R,'[data-a=gantt]').innerHTML='<g filter="url(#czw)">'+g+'</g>';
+    $(R,'[data-a=nl]').textContent=early?'4':'2';$$(R,'[data-l]').forEach(function(l){l.classList.toggle('gone',!early);});
+    $(R,'[data-a=note]').innerHTML=si===0?'Weeks 3–8: the <b>yolk sac</b> makes blood. This is also the embryonic period, when organs form.':si===1?'Months 2–7: the <b>liver</b> is the main site. Week 20 is still liver.'+(early?' Before month 4 the barrier has four layers.':' After month 4 the barrier thins to syncytiotrophoblast + fetal endothelium.'):'After month 7 the <b>bone marrow</b> takes over. Survival rises after about 28 weeks (surfactant).';}
+  sl.oninput=function(){draw(+sl.value);};draw(20);return R;};
+
+/* ---------- 6–7. SORTERS ---------- */
+var BINC=['var(--jel)','var(--sac)','var(--bone2)','var(--leaf)','#FFB8C6'];
+M.cozy.sort=function(id,o){boot2();
+  var R=mount(id,'<div class="hrow"><span class="chip">'+(o.chip||'Sort it')+'</span><span class="scr" data-a="sc">0 / 0</span></div><h3>'+o.title+'</h3><div class="sub">'+(o.sub||'Tap the right basket.')+'</div>'+
+   (o.tabs?'<div class="segs">'+o.tabs.map(function(t,i){return '<button class="pill'+(i?'':' on')+'" data-t="'+i+'">'+t.name+'</button>';}).join('')+'</div>':'')+
+   '<div class="prog"><i style="width:0%"></i></div><div class="deck"><div class="dcard" data-a="it"></div></div><div class="bins" data-a="bins"></div><div data-a="fb"></div><div class="foot">'+(o.src||'')+'</div>');
+  if(!R)return;var set,deck,k,ok,miss;
+  function load(s){set=s;deck=shuf(s.items);k=0;ok=0;miss=[];$(R,'[data-a=bins]').innerHTML=s.bins.map(function(b,i){return '<button class="bin" data-b="'+b.id+'" style="background:'+BINC[i%BINC.length]+'">'+b.name+'</button>';}).join('');next();}
+  function next(){$$(R,'.bin').forEach(function(b){b.classList.remove('ok','no');b.disabled=false;});var d=$(R,'[data-a=it]');
+    $(R,'.prog i').style.width=(k/deck.length*100)+'%';$(R,'[data-a=sc]').textContent=ok+' / '+deck.length;$(R,'[data-a=fb]').innerHTML='';
+    if(k>=deck.length){d.innerHTML='<span class="lab">Round done</span><div class="big" style="margin:2px 0 4px;color:var(--txt)">'+ok+'<span style="font-size:24px;color:var(--mut)"> / '+deck.length+'</span></div>'+(miss.length?'<div class="segs" style="justify-content:center;margin-top:4px">'+miss.map(function(m){return '<span class="pill no" style="box-shadow:none;padding:6px 10px 5px;font-size:12.5px">'+m+'</span>';}).join('')+'</div>':'<div class="q">Clean sweep ✦</div>')+'<button class="btn sm" data-a="again" style="margin-top:12px">Shuffle and go again</button>';$$(R,'.bin').forEach(function(b){b.disabled=true;});return;}
+    d.innerHTML='<span class="lab">'+(k+1)+' of '+deck.length+'</span><div class="w in">'+deck[k].n+'</div>';}
+  R.addEventListener('click',function(e){var t=e.target.closest('[data-t]');if(t){$$(R,'[data-t]').forEach(function(c){c.classList.toggle('on',c===t);});load(o.tabs[+t.dataset.t]);return;}
+    if(e.target.closest('[data-a=again]')){load(set);return;}if(e.target.closest('[data-a=nx]')){k++;next();return;}
+    var b=e.target.closest('.bin');if(!b||b.disabled||k>=deck.length)return;var it=deck[k],right=b.dataset.b===it.b;
+    $$(R,'.bin').forEach(function(x){x.disabled=true;if(x.dataset.b===it.b)x.classList.add('ok');});if(!right){b.classList.add('no');miss.push(it.n);shake($(R,'.deck'));}else ok++;
+    $(R,'[data-a=sc]').textContent=ok+' / '+deck.length;var bn=set.bins.filter(function(x){return x.id===it.b;})[0].name;
+    $(R,'[data-a=fb]').innerHTML='<div class="fbk in"><span class="rs" style="background:var(--'+(right?'leaf':'ouch')+')">'+(right?'✓':'✗')+'</span><div class="gx"><b>'+bn+'.</b> '+(it.w||'')+'</div><button class="btn sm" data-a="nx">Next</button></div>';});
+  load(o.tabs?o.tabs[0]:o);return R;};
+var CREST={bins:[{id:'c',name:'Neural crest'},{id:'t',name:'Neural tube'},{id:'m',name:'Mesoderm'},{id:'e',name:'Endoderm'},{id:'s',name:'Surface ectoderm'}],items:[
+ {n:'Schwann cells',b:'c',w:'PNS myelin. In her words: “not oligodendrocytes, the Schwann cells.”'},
+ {n:'Oligodendrocytes',b:'t',w:'CNS myelin comes from the neural tube.'},
+ {n:'Dorsal root ganglion neurons',b:'c',w:'Every ganglion outside the CNS is crest.'},
+ {n:'Sympathetic chain ganglia',b:'c',w:'Autonomic ganglia are crest.'},
+ {n:'Melanocytes',b:'c',w:'Pigment cells migrate out from the crest.'},
+ {n:'Adrenal medulla',b:'c',w:'Chromaffin cells are modified sympathetic neurons.'},
+ {n:'Adrenal cortex',b:'m',w:'Mesoderm. The medulla is crest; the cortex is not.'},
+ {n:'Thyroid C cells',b:'c',w:'Parafollicular cells that make calcitonin.'},
+ {n:'Thyroid follicular cells',b:'e',w:'The follicles (thyroxine) are endoderm.'},
+ {n:'Pia and arachnoid',b:'c',w:'The leptomeninges are crest.'},
+ {n:'Dura mater',b:'m',w:'Dura is mesoderm.'},
+ {n:'Odontoblasts',b:'c',w:'The dentin-making cells of teeth.'},
+ {n:'Spinal cord motor neurons',b:'t',w:'Neurons inside the CNS come from the neural tube.'},
+ {n:'Enteric ganglia of the gut',b:'c',w:'The gut’s own nervous system is crest.'},
+ {n:'Epidermis',b:'s',w:'Surface ectoderm. Its melanocytes are crest, but the epidermis is not.'},
+ {n:'Lens of the eye',b:'s',w:'Surface ectoderm.'}]};
+M.cozy.crest=function(id){return M.cozy.sort(id,{chip:'Crest or not?',title:'Neural crest sorter',sub:'Tap where each cell comes from.',bins:CREST.bins,items:CREST.items,src:'Dr. Shrestha · L17 00:03:25 · “in the exam you’ll simply be asked which of the following is a neural crest derivative”'});};
+var AFP={name:'AFP high or low',bins:[{id:'h',name:'AFP high ↑'},{id:'l',name:'AFP low ↓'}],items:[
+ {n:'Anencephaly',b:'h',w:'Open neural tube defect.'},{n:'Open meningomyelocele',b:'h',w:'Open neural tube defect.'},{n:'Omphalocele',b:'h',w:'Body-wall defect.'},{n:'Gastroschisis',b:'h',w:'Body-wall defect.'},{n:'Bladder exstrophy',b:'h',w:'Open defect.'},{n:'Sacrococcygeal teratoma',b:'h',w:'On her high list.'},{n:'Amniotic band syndrome',b:'h',w:'On her high list.'},{n:'Intestinal atresia',b:'h',w:'On her high list.'},
+ {n:'Trisomy 21',b:'l',w:'Chromosomal, so AFP is low.'},{n:'Trisomy 18',b:'l',w:'Chromosomal, so AFP is low.'},{n:'Triploidy',b:'l',w:'Chromosomal, so AFP is low.'},{n:'Sex-chromosome abnormality',b:'l',w:'Chromosomal, so AFP is low.'}]};
+var DEF={name:'Defect type',bins:[{id:'ma',name:'Malformation'},{id:'de',name:'Deformation'},{id:'di',name:'Disruption'},{id:'sy',name:'Syndrome'},{id:'as',name:'Association'}],items:[
+ {n:'Bilateral renal agenesis',b:'ma',w:'Formed wrong during organogenesis (weeks 3–8).'},
+ {n:'Clubfeet from oligohydramnios',b:'de',w:'Normal bones pushed out of shape by compression.'},
+ {n:'Fingers amputated by fibrous bands',b:'di',w:'A normal part destroyed by an amniotic band.'},
+ {n:'Phocomelia after thalidomide',b:'ma',w:'Limbs formed wrong in the sensitive window.'},
+ {n:'Anencephaly',b:'ma',w:'The neural tube failed to close.'},
+ {n:'Flattened face from oligohydramnios',b:'de',w:'Compression, not abnormal formation.'},
+ {n:'Many defects from one known cause (trisomy 21)',b:'sy',w:'A syndrome has one cause.'},
+ {n:'Vertebral, anal, cardiac, TE fistula, renal, limb cluster',b:'as',w:'VACTERL: a non-random cluster with no single cause.'}]};
+M.cozy.defects=function(id){return M.cozy.sort(id,{chip:'Sort the defects',title:'AFP and defect types',sub:'Two decks. Switch with the tabs.',tabs:[AFP,DEF],src:'Dr. Shrestha · L18 (AFP 00:49:56 · deformation 00:11:25) · deck s6, s37'});};
+
+M.cozy.v='1.1.0';
 })();
